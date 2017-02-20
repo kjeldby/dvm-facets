@@ -16,15 +16,15 @@ You do not have to choose what kind of results you are looking for before you ge
 
 The anatomy of a WordPress search is simple. When you enter the search string foobar and click search, WordPress requests the URL `/?s=foobar`.
 
-Every time WordPress receives a request where the key s is set to some value the request is treated as a search and redirected to the result page.
+Every time WordPress receives a request where the key `s` is set to some value the request is treated as a search and redirected to the result page.
 
 ### The `wp_query` object
 
-The results is fetched from the data layer using the object ``wp_query``. The `wp_query` maintains a collection of predefined search conditions in key/value collection called query variables. The collection is manipulated by the two methods set and get.
+The results is fetched from the data layer using the object ``wp_query``. The `wp_query` maintains a collection of predefined search conditions in key/value collection called query variables. The collection is manipulated by the two methods `set` and `get`.
 
-The `wp_query` works by example: Most predefined query variables mirror the properties of a WordPress page. If you e.g. wish to fetch all pages with the title Frontpage you set the query variable `post_title` to Frontpage.
+The `wp_query` works by example: Most predefined query variables mirror the properties of a WordPress page. If you e.g. wish to fetch all pages with the title `Frontpage` you set the query variable `post_title` to `Frontpage`.
 
-But the `wp_query` also includes some special query variables not directly related to page properties. The search uses its own variable s to do full text searches. After this variable has been set the search continues and calls the method `get_post`.
+But the `wp_query` also includes some special query variables not directly related to page properties. The search uses its own variable `s`w to do full text searches. After this variable has been set the search continues and calls the method `get_post`.
 
 The method `get_posts` execute the following steps:
 
@@ -34,6 +34,8 @@ The method `get_posts` execute the following steps:
 4. Execute the SQL query and fetch the result. The database interaction is done by the data abstraction object `wpdb`.
 
 ## Implementing faceted search in WordPress
+
+![UML facets](http://blog.kjeldby.dk/wp-content/uploads/uml-facet-hierarchy.png "UML facets")
 
 My plugin consist of two parts: A widget and a applier. The widget shows a list of all facets on the search result page:
 
@@ -85,27 +87,27 @@ $c->key = 'post_author';
 $c->value = '25';
 ```
 
-Facet $a shows only blog posts, facet $b shows only child pages of a specific page and facet `$c` shows only content from a specific author.
+Facet `$a` shows only blog posts, facet `$b` shows only child pages of a specific page and facet `$c` shows only content from a specific author.
 
 ##### Understanding `post_type` property
 
-WordPress’s two types of content – pages and posts – are both stored in the wp_posts table. The post_type property is used to differentiate the two.
+WordPress’s two types of content – pages and posts – are both stored in the `wp_posts` table. The `post_type` property is used to differentiate the two.
 
-When WordPress introduced custom types (e.g. post_type='article' or post_type='record') a set of method was needed that would work on all post types. The result is a rather confusing API where the term post can mean content with post_type='post' as well as all kind of content in the wp_posts table.
+When WordPress introduced custom types (e.g. `post_type='article'` or `post_type='record'`) a set of method was needed that would work on all post types. The result is a rather confusing API where the term post can mean content with `post_type='post'` as well as all kind of content in the `wp_posts` table.
 
 #### Pages that have a specific set of metadata
 
 Besides having properties a WordPress page has a key/value collection of custom meta data. My other type of facet adds conditions to this collection:
 
 ```
-?±class Meta_Facet extends Facet
+class Meta_Facet extends Facet
 {
     /* (non-PHPdoc)
     * @see DVM_Facets_Facet::add_facet()
     */
-    public function add_facet(&$`wp_query`)
+    public function add_facet(&$wp_query)
     {
-        $meta_query = $`wp_query`->get('meta_query');
+        $meta_query = $wp_query->get('meta_query');
         $meta_query[] =
             array
             (
@@ -113,7 +115,7 @@ Besides having properties a WordPress page has a key/value collection of custom 
                 'value' => $this->value,
                 'compare' => 'LIKE'
             );
-        $`wp_query`->set('meta_query', $meta_query);
+        $wp_query->set('meta_query', $meta_query);
     }
 }```
 
@@ -159,30 +161,30 @@ class Ancestor_Facet extends Property_Facet
     /* (non-PHPdoc)
     * @see Property_Facet::add_facet()
     */
-    public function add_facet(&$`wp_query`)
+    public function add_facet(&$wp_query)
     {
         $this->value =
             $this->dal->get_descendant_ids($this->ancestor_id);
-        parent::add_facet($`wp_query`);
+        parent::add_facet($wp_query);
     }
 }
 ```
 
 ## Applying the facet
 
-The next part of the puzzle is the mechanism that add the facet to the search when the request /s=foobar&facet_id=4 is made. This is done by the Applier with is hooked up to the pre_get_posts event and hence run each time the `wp_query` is about to fetch pages.
+The next part of the puzzle is the mechanism that add the facet to the search when the request `/s=foobar&facet_id=4` is made. This is done by the Applier with is hooked up to the `pre_get_posts` event and hence run each time the `wp_query` is about to fetch pages.
 
 ```
 class Applier
 {
     /**
-    * Applies any selected facets to the `wp_query`
-    * @param `wp_query` $`wp_query`
+    * Applies any selected facets to the wp_query
+    * @param wp_query $wp_query
     */
-    function on_pre_get_posts(&$`wp_query`)
+    function on_pre_get_posts(&$wp_query)
     {
 
-        if ($`wp_query`->is_search())
+        if ($wp_query->is_search())
         {
             $facet_query = new DVM_Facets_Facet_Query();
             $facet_query->
@@ -192,7 +194,7 @@ class Applier
                 $dal = new DVM_Facets_Dal();
                 $facet = $dal->
                 get_facet($facet_query->facet_id);
-                $facet->add_facet($`wp_query`);
+                $facet->add_facet($wp_query);
             }
         }
     }
@@ -203,5 +205,5 @@ The `wp_query` is used extensively in WordPress but most of the time the applier
 
 But when a search is done and a facet is requested the applier gets the facet and then add it to the `wp_query`.
 
-The filter uses a Facet_Query to interact with the query string. This object encapsulates the query string and the parsing of it.
+The filter uses a `Facet_Query` to interact with the query string. This object encapsulates the query string and the parsing of it.
 

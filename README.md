@@ -37,7 +37,7 @@ The method `get_posts` execute the following steps:
 
 ![UML facets](http://blog.kjeldby.dk/wp-content/uploads/uml-facet-hierarchy.png "UML facets")
 
-My plugin consist of two parts: A widget and a applier. The widget shows a list of all facets on the search result page:
+My plugin consist of two parts: A widget and a Filter. The widget shows a list of all facets on the search result page:
 
 Each facet is identified by an id, and when the user click a facets this id is added to the query string of a new search `/s=foobar&facet_id=4`.
 
@@ -117,7 +117,8 @@ class Meta_Facet extends Facet
             );
         $wp_query->set('meta_query', $meta_query);
     }
-}```
+}
+```
 
 I use this type to create a facet that show only pages with a specific template:
 
@@ -172,10 +173,10 @@ class Ancestor_Facet extends Property_Facet
 
 ## Applying the facet
 
-The next part of the puzzle is the mechanism that add the facet to the search when the request `/s=foobar&facet_id=4` is made. This is done by the Applier with is hooked up to the `pre_get_posts` event and hence run each time the `wp_query` is about to fetch pages.
+The next part of the puzzle is the mechanism that add the facet to the search when the request `/s=foobar&facet_id=4` is made. This is done by the Filter with is hooked up to the `pre_get_posts` event and hence run each time the `wp_query` is about to fetch pages.
 
 ```
-class Applier
+class Filter
 {
     /**
     * Applies any selected facets to the wp_query
@@ -201,9 +202,9 @@ class Applier
 }
 ```
 
-The `wp_query` is used extensively in WordPress but most of the time the applier does not do anything either because the `wp_query` is not prepared for a search or because no facets are specified in the query string.
+The `wp_query` is used extensively in WordPress but most of the time the Filter does not do anything either because the `wp_query` is not prepared for a search or because no facets are specified in the query string.
 
-But when a search is done and a facet is requested the applier gets the facet and then add it to the `wp_query`.
+But when a search is done and a facet is requested the Filter gets the facet and then add it to the `wp_query`.
 
 The filter uses a `Facet_Query` to interact with the query string. This object encapsulates the query string and the parsing of it.
 

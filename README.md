@@ -89,7 +89,7 @@ $c->value = '25';
 
 Facet `$a` shows only blog posts, facet `$b` shows only child pages of a specific page and facet `$c` shows only content from a specific author.
 
-##### Understanding `post_type` property
+#### Understanding `post_type` property
 
 WordPress’s two types of content – pages and posts – are both stored in the `wp_posts` table. The `post_type` property is used to differentiate the two.
 

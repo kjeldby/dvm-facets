@@ -132,7 +132,7 @@ $d->value = 'article.php';
 
 The last type of facet shows only descendants of a specific page. I use this kind of facets to show results from different sections of my page.
 
-To do this I need to get a list of all the descendants ids. Then I add this list to the query variable post__in. This narrows down the search to only the list of descendants.
+To do this I need to get a list of all the descendants ids. Then I add this list to the query variable `post__in`. This narrows down the search to only the list of descendants.
 
 So a ancestor facet is much like a property facet – we just need the list of ids. So I extent the property facet and inject a data access object that can create the list:
 
@@ -173,7 +173,7 @@ class Ancestor_Facet extends Property_Facet
 
 ## Applying the facet
 
-The next part of the puzzle is the mechanism that add the facet to the search when the request `/s=foobar&facet_id=4` is made. This is done by the Filter with is hooked up to the `pre_get_posts` event and hence run each time the `wp_query` is about to fetch pages.
+The next part of the puzzle is the mechanism that add the facet to the search when the request `/s=foobar&facet_id=4` is made. This is done by the `Filter` with is hooked up to the `pre_get_posts` event and hence run each time the `wp_query` is about to fetch pages.
 
 ```
 class Filter
@@ -204,7 +204,7 @@ class Filter
 
 The `wp_query` is used extensively in WordPress but most of the time the Filter does not do anything either because the `wp_query` is not prepared for a search or because no facets are specified in the query string.
 
-But when a search is done and a facet is requested the Filter gets the facet and then add it to the `wp_query`.
+But when a search is done and a facet is requested the `Filter` gets the facet and then add it to the `wp_query`.
 
 The filter uses a `Facet_Query` to interact with the query string. This object encapsulates the query string and the parsing of it.
 
